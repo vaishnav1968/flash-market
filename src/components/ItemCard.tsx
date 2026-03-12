@@ -39,7 +39,7 @@ export default function ItemCard({ item, onClaim }: Props) {
         </span>
 
         {/* Discount badge */}
-        {pctOff > 0 && !expired && (
+        {pctOff > 0 && !expired && !isClaimed && (
           <span className="absolute right-2 top-2 rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white shadow">
             -{pctOff}%
           </span>
@@ -52,8 +52,8 @@ export default function ItemCard({ item, onClaim }: Props) {
           </span>
         )}
         {isClaimed && (
-          <span className="absolute left-2 top-2 rounded-full bg-blue-600 px-2 py-0.5 text-xs font-bold text-white">
-            Claimed
+          <span className="absolute left-2 top-2 rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-white">
+            Sold Out
           </span>
         )}
       </div>
@@ -77,6 +77,11 @@ export default function ItemCard({ item, onClaim }: Props) {
 
         {/* Price + Timer */}
         <div className="mt-auto pt-3">
+          {isClaimed ? (
+            <div className="flex items-center justify-center py-2">
+              <span className="text-sm font-bold text-red-500">Sold Out</span>
+            </div>
+          ) : (
           <div className="flex items-end justify-between">
             <div>
               {pctOff > 0 && (
@@ -102,6 +107,7 @@ export default function ItemCard({ item, onClaim }: Props) {
               </p>
             </div>
           </div>
+          )}
 
           {/* Qty + Claim */}
           <div className="mt-3 flex items-center justify-between">
@@ -117,7 +123,7 @@ export default function ItemCard({ item, onClaim }: Props) {
                   : "bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm"
               }`}
             >
-              {isClaimed ? "Claimed" : expired ? "Expired" : "🛒 Claim"}
+              {isClaimed ? "Sold Out" : expired ? "Expired" : "🛒 Claim"}
             </button>
           </div>
         </div>
