@@ -36,7 +36,7 @@ public/
 ## Dynamic Pricing Engine
 
 ```
-CurrentPrice = BasePrice × max(TimeRemaining / TotalWindow, FloorPct)
+CurrentPrice = BasePrice × (TimeRemaining / TotalWindow)
 ```
 
 - **FloorPct** = 0.40 (40%) — vendors always cover basic costs
