@@ -1,0 +1,25 @@
+{
+  "name": "FlashMarket",
+  "short_name": "FlashMarket",
+  "description": "Real-time marketplace for surplus perishable food with dynamic pricing",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#059669",
+  "orientation": "portrait-primary",
+  "categories": ["food", "shopping"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

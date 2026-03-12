@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-inter);
+  --color-emerald-600: #059669;
+}
+
+body {
+  background: #f9fafb;
+  color: #111827;
+}
+
+/* Smooth price transitions */
+.price-flash {
+  transition: color 0.3s ease;
+}
+
+/* Hide scrollbar on filter bars */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
