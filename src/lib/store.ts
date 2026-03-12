@@ -161,27 +161,38 @@ export async function addItem(payload: CreateItemPayload): Promise<Item | null> 
   return newItem;
 }
 
-/** Claim an item — update status in Supabase, with local fallback */
+/** Claim an item — decrement quantity, mark sold out only when 0 */
 export async function claimItem(
   itemId: string,
   buyerId: string,
-  claimedPrice: number
+  claimedPrice: number,
+  claimQty: number = 1
 ): Promise<Item | null> {
   try {
+    // First fetch current quantity
+    const { data: current } = await supabase
+      .from("items")
+      .select("quantity")
+      .eq("id", itemId)
+      .single();
+
+    const newQty = Math.max(0, (current?.quantity ?? 1) - claimQty);
+    const nowIso = new Date().toISOString();
+
     const { data, error } = await supabase
       .from("items")
       .update({
-        status: "claimed",
-        claimed_by: buyerId,
-        claimed_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        quantity: newQty,
+        status: newQty <= 0 ? "claimed" : "available",
+        claimed_by: newQty <= 0 ? buyerId : null,
+        claimed_at: newQty <= 0 ? nowIso : null,
+        updated_at: nowIso,
       })
       .eq("id", itemId)
       .select()
       .single();
 
     if (!error && data) {
-      // Also insert into claims table
       await supabase.from("claims").insert({
         item_id: itemId,
         buyer_id: buyerId,
@@ -194,6 +205,7 @@ export async function claimItem(
       if (cachedItems) cachedItems = cachedItems.map((i) => (i.id === itemId ? item : i));
       return item;
     }
+    // Supabase returned an error — fall through to local fallback
   } catch {
     // Supabase unavailable — fall through to local fallback
   }
@@ -203,9 +215,17 @@ export async function claimItem(
   if (cachedItems) {
     const found = cachedItems.find((i) => i.id === itemId);
     if (found) {
-      const claimed = { ...found, status: "claimed" as const, claimedBy: buyerId, claimedAt: nowIso, updatedAt: nowIso };
-      cachedItems = cachedItems.map((i) => (i.id === itemId ? claimed : i));
-      return claimed;
+      const newQty = Math.max(0, found.quantity - claimQty);
+      const updated: Item = {
+        ...found,
+        quantity: newQty,
+        status: newQty <= 0 ? "claimed" : "available",
+        claimedBy: newQty <= 0 ? buyerId : undefined,
+        claimedAt: newQty <= 0 ? nowIso : undefined,
+        updatedAt: nowIso,
+      };
+      cachedItems = cachedItems.map((i) => (i.id === itemId ? updated : i));
+      return updated;
     }
   }
   return null;

@@ -7,7 +7,7 @@ import { CATEGORY_LABELS } from "@/lib/constants";
 
 interface Props {
   items: Item[];
-  onClaim: (itemId: string, price: number) => void;
+  onClaim: (itemId: string, price: number, quantity: number) => void;
   loading?: boolean;
 }
 

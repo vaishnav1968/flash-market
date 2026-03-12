@@ -13,6 +13,7 @@ export default function HomePage() {
     itemId: string;
     name: string;
     price: number;
+    quantity: number;
   } | null>(null);
 
   // Fetch items from Supabase on mount
@@ -24,10 +25,10 @@ export default function HomePage() {
   }, []);
 
   const handleClaim = useCallback(
-    (itemId: string, price: number) => {
+    (itemId: string, price: number, quantity: number) => {
       const item = items.find((i) => i.id === itemId);
       if (!item) return;
-      setClaiming({ itemId, name: item.name, price });
+      setClaiming({ itemId, name: item.name, price, quantity });
     },
     [items]
   );
@@ -37,7 +38,8 @@ export default function HomePage() {
     const updated = await claimItem(
       claiming.itemId,
       "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
-      claiming.price
+      claiming.price,
+      claiming.quantity
     );
     if (updated) {
       setItems((prev) =>
@@ -100,6 +102,7 @@ export default function HomePage() {
         <ClaimModal
           itemName={claiming.name}
           price={claiming.price}
+          quantity={claiming.quantity}
           onConfirm={confirmClaim}
           onCancel={() => setClaiming(null)}
         />

@@ -5,6 +5,7 @@ import { useState } from "react";
 interface Props {
   itemName: string;
   price: number;
+  quantity: number;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -12,6 +13,7 @@ interface Props {
 export default function ClaimModal({
   itemName,
   price,
+  quantity,
   onConfirm,
   onCancel,
 }: Props) {
@@ -28,7 +30,10 @@ export default function ClaimModal({
             <span className="font-bold text-emerald-600">
               ₹{price.toFixed(2)}
             </span>{" "}
-            in person for <span className="font-semibold">{itemName}</span>.
+            in person for{" "}
+            <span className="font-semibold">
+              {quantity > 1 ? `${quantity}× ` : ""}{itemName}
+            </span>.
           </p>
           <button
             onClick={onCancel}
@@ -49,11 +54,18 @@ export default function ClaimModal({
         </h3>
         <p className="mt-2 text-sm text-gray-600">
           You&apos;re claiming{" "}
-          <span className="font-semibold">{itemName}</span> at the current
+          <span className="font-semibold">
+            {quantity > 1 ? `${quantity}× ` : ""}{itemName}
+          </span>{" "}at the current
           flash price of{" "}
           <span className="font-bold text-emerald-600">
             ₹{price.toFixed(2)}
           </span>
+          {quantity > 1 && (
+            <span className="text-xs text-gray-400">
+              {" "}(₹{(price / quantity).toFixed(2)} each)
+            </span>
+          )}
           . No online payment — just show up and pay the vendor directly.
         </p>
 
