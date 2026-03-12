@@ -23,24 +23,19 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 function getAuthRedirectBaseUrl() {
+  if (typeof window !== "undefined") {
+    const currentOrigin = window.location.origin.replace(/\/$/, "");
+    const currentIsLocal = /localhost|127\.0\.0\.1/i.test(currentOrigin);
+
+    // When running on a deployed domain, always trust the live origin.
+    if (!currentIsLocal) {
+      return currentOrigin;
+    }
+  }
+
   const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
   if (configured) {
     const normalizedConfigured = configured.replace(/\/$/, "");
-
-    if (typeof window !== "undefined") {
-      const currentOrigin = window.location.origin.replace(/\/$/, "");
-      const configuredIsLocal = /localhost|127\.0\.0\.1/i.test(
-        normalizedConfigured
-      );
-      const currentIsLocal = /localhost|127\.0\.0\.1/i.test(currentOrigin);
-
-      // If deployed site is open but env accidentally points to localhost,
-      // prefer the real current origin to avoid local redirect loops.
-      if (configuredIsLocal && !currentIsLocal) {
-        return currentOrigin;
-      }
-    }
-
     return normalizedConfigured;
   }
 
