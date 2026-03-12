@@ -26,7 +26,7 @@ export default function ClaimModal({
           <p className="mt-2 text-sm text-gray-600">
             Head to the vendor&apos;s shop and pay{" "}
             <span className="font-bold text-emerald-600">
-              ${price.toFixed(2)}
+              ₹{price.toFixed(2)}
             </span>{" "}
             in person for <span className="font-semibold">{itemName}</span>.
           </p>
@@ -52,7 +52,7 @@ export default function ClaimModal({
           <span className="font-semibold">{itemName}</span> at the current
           flash price of{" "}
           <span className="font-bold text-emerald-600">
-            ${price.toFixed(2)}
+            ₹{price.toFixed(2)}
           </span>
           . No online payment — just show up and pay the vendor directly.
         </p>

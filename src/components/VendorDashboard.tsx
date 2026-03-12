@@ -146,7 +146,7 @@ export default function VendorDashboard({ onSubmit }: Props) {
       <div className="grid grid-cols-3 gap-4">
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">
-            Base Price ($) *
+            Base Price (₹) *
           </label>
           <input
             name="basePrice"
@@ -241,16 +241,16 @@ export default function VendorDashboard({ onSubmit }: Props) {
           Pricing Preview
         </p>
         <p className="mt-1 text-sm text-gray-700">
-          Base: <span className="font-bold">${form.basePrice.toFixed(2)}</span>
+          Base: <span className="font-bold">₹{form.basePrice.toFixed(2)}</span>
           {" → "}
-          Floor (20%):{" "}
+          Floor (40%):{" "}
           <span className="font-bold text-emerald-600">
-            ${(form.basePrice * 0.2).toFixed(2)}
+            ₹{(form.basePrice * 0.4).toFixed(2)}
           </span>
         </p>
         <p className="mt-0.5 text-xs text-gray-500">
           Price will decay linearly over {form.shelfLifeHours}h, never below the
-          20% floor.
+          40% floor.
         </p>
       </div>
 

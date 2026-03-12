@@ -29,7 +29,7 @@ export function useRealTimePrice({
   basePrice,
   listedAt,
   expiresAt,
-  priceFloorPct = 0.2,
+  priceFloorPct = 0.4,
   intervalMs = 1000,
 }: UseRealTimePriceOptions): RealTimePriceState {
   const compute = useCallback(() => {

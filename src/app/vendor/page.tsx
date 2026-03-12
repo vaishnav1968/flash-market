@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import VendorDashboard from "@/components/VendorDashboard";
 import { addItem, getItems } from "@/lib/store";
 import type { CreateItemPayload, Item } from "@/lib/types";
@@ -8,13 +8,25 @@ import { CATEGORY_COLORS } from "@/lib/constants";
 import { calculateDynamicPrice, formatTimeRemaining } from "@/lib/pricing";
 
 export default function VendorPage() {
-  const [items, setItems] = useState<Item[]>(() =>
-    getItems().filter((i) => i.vendorId === "vendor_demo_001")
-  );
+  const [items, setItems] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  function handleSubmit(payload: CreateItemPayload) {
-    const newItem = addItem(payload);
-    setItems((prev) => [newItem, ...prev]);
+  useEffect(() => {
+    getItems().then((data) => {
+      setItems(
+        data.filter(
+          (i) => i.vendorId === "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"
+        )
+      );
+      setLoading(false);
+    });
+  }, []);
+
+  async function handleSubmit(payload: CreateItemPayload) {
+    const newItem = await addItem(payload);
+    if (newItem) {
+      setItems((prev) => [newItem, ...prev]);
+    }
   }
 
   return (
@@ -41,7 +53,12 @@ export default function VendorPage() {
             Your Live Listings ({items.length})
           </h2>
 
-          {items.length === 0 ? (
+          {loading ? (
+            <div className="flex flex-col items-center justify-center rounded-2xl bg-gray-50 py-16 text-gray-400">
+              <span className="text-4xl mb-2 animate-pulse">⚡</span>
+              <p className="text-sm">Loading from Supabase…</p>
+            </div>
+          ) : items.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-2xl bg-gray-50 py-16 text-gray-400">
               <span className="text-4xl mb-2">📋</span>
               <p className="text-sm">No items listed yet. Upload your first!</p>
@@ -93,11 +110,11 @@ export default function VendorPage() {
                       <div className="flex items-center gap-2">
                         {pricing.pctOff > 0 && (
                           <span className="text-xs text-gray-400 line-through">
-                            ${item.basePrice.toFixed(2)}
+                            ₹{item.basePrice.toFixed(2)}
                           </span>
                         )}
                         <span className="text-sm font-bold text-emerald-600">
-                          ${pricing.currentPrice.toFixed(2)}
+                          ₹{pricing.currentPrice.toFixed(2)}
                         </span>
                       </div>
                       <p

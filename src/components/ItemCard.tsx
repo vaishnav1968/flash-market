@@ -81,11 +81,11 @@ export default function ItemCard({ item, onClaim }: Props) {
             <div>
               {pctOff > 0 && (
                 <span className="text-xs text-gray-400 line-through mr-1">
-                  ${item.basePrice.toFixed(2)}
+                  ₹{item.basePrice.toFixed(2)}
                 </span>
               )}
               <span className="text-lg font-extrabold text-emerald-600">
-                ${currentPrice.toFixed(2)}
+                ₹{currentPrice.toFixed(2)}
               </span>
               <span className="ml-1 text-xs text-gray-400">/{item.unit}</span>
             </div>

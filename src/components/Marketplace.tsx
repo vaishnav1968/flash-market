@@ -8,12 +8,13 @@ import { CATEGORY_LABELS } from "@/lib/constants";
 interface Props {
   items: Item[];
   onClaim: (itemId: string, price: number) => void;
+  loading?: boolean;
 }
 
 const ALL = "all" as const;
 type Filter = ItemCategory | typeof ALL;
 
-export default function Marketplace({ items, onClaim }: Props) {
+export default function Marketplace({ items, onClaim, loading }: Props) {
   const [filter, setFilter] = useState<Filter>(ALL);
   const [search, setSearch] = useState("");
 
@@ -76,7 +77,12 @@ export default function Marketplace({ items, onClaim }: Props) {
       </div>
 
       {/* Grid */}
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+          <span className="text-4xl mb-2 animate-pulse">⚡</span>
+          <p className="text-sm">Loading items from Supabase…</p>
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-gray-400">
           <span className="text-4xl mb-2">🔎</span>
           <p className="text-sm">No items found.</p>

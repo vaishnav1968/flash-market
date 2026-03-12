@@ -1,88 +1,212 @@
-// ── FlashMarket — Local mock store (replaces Supabase during dev) ──
+// ── FlashMarket — Supabase-backed store (with local fallback) ──
 
+import { supabase } from "@/lib/supabase";
 import type { Item, CreateItemPayload } from "@/lib/types";
-import seedData from "@/data/perishable-items.json";
+import localItems from "@/data/perishable-items.json";
 
-// Hydrate seed data with dynamic fields
-function hydrateItems(): Item[] {
+// ── In-memory cache shared across pages (persists during session) ──
+let cachedItems: Item[] | null = null;
+
+/** Convert a seed JSON entry into a full Item with generated timestamps */
+function seedToItem(raw: (typeof localItems)[number]): Item {
   const now = new Date();
-  return seedData.map((raw) => {
-    const listedAt = new Date(
-      now.getTime() - Math.random() * raw.shelfLifeHours * 3_600_000 * 0.5
-    );
-    const expiresAt = new Date(
-      listedAt.getTime() + raw.shelfLifeHours * 3_600_000
-    );
-    return {
-      id: raw.id,
-      vendorId: "vendor_demo_001",
-      name: raw.name,
-      description: raw.description,
-      category: raw.category as Item["category"],
-      basePrice: raw.basePrice,
-      unit: raw.unit,
-      quantity: Math.floor(Math.random() * 10) + 1,
-      imageUrl: raw.imageUrl,
-      tags: raw.tags,
-      shelfLifeHours: raw.shelfLifeHours,
-      listedAt: listedAt.toISOString(),
-      expiresAt: expiresAt.toISOString(),
-      priceFloorPct: 0.2,
-      status: "available" as const,
-      createdAt: listedAt.toISOString(),
-      updatedAt: listedAt.toISOString(),
-    };
-  });
+  const listedAt = now.toISOString();
+  const expiresAt = new Date(
+    now.getTime() + raw.shelfLifeHours * 3_600_000
+  ).toISOString();
+  return {
+    id: raw.id,
+    vendorId: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+    name: raw.name,
+    description: raw.description ?? "",
+    category: raw.category as Item["category"],
+    basePrice: raw.basePrice,
+    unit: raw.unit,
+    quantity: 1,
+    imageUrl: raw.imageUrl ?? "",
+    tags: raw.tags ?? [],
+    shelfLifeHours: raw.shelfLifeHours,
+    listedAt,
+    expiresAt,
+    priceFloorPct: 0.4,
+    status: "available",
+    createdAt: listedAt,
+    updatedAt: listedAt,
+  };
 }
 
-let items: Item[] = [];
-
-export function getItems(): Item[] {
-  if (items.length === 0) items = hydrateItems();
-  return items;
+/** Map Supabase snake_case row → camelCase Item */
+function rowToItem(row: Record<string, unknown>): Item {
+  return {
+    id: row.id as string,
+    vendorId: row.vendor_id as string,
+    name: row.name as string,
+    description: (row.description as string) ?? "",
+    category: row.category as Item["category"],
+    basePrice: Number(row.base_price),
+    unit: row.unit as string,
+    quantity: Number(row.quantity),
+    imageUrl: (row.image_url as string) ?? "",
+    tags: (row.tags as string[]) ?? [],
+    shelfLifeHours: Number(row.shelf_life_hours),
+    listedAt: row.listed_at as string,
+    expiresAt: row.expires_at as string,
+    priceFloorPct: Number(row.price_floor_pct),
+    status: row.status as Item["status"],
+    claimedBy: (row.claimed_by as string) ?? undefined,
+    claimedAt: (row.claimed_at as string) ?? undefined,
+    createdAt: row.created_at as string,
+    updatedAt: row.updated_at as string,
+  };
 }
 
-export function getItemById(id: string): Item | undefined {
-  return getItems().find((i) => i.id === id);
+/** Fetch all available items from Supabase, falling back to local JSON */
+export async function getItems(): Promise<Item[]> {
+  // Return cached items if already loaded (includes vendor-added items)
+  if (cachedItems) return cachedItems;
+
+  try {
+    const { data, error } = await supabase
+      .from("items")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error || !data || data.length === 0) {
+      cachedItems = localItems.map(seedToItem);
+      return cachedItems;
+    }
+    cachedItems = data.map(rowToItem);
+    return cachedItems;
+  } catch {
+    cachedItems = localItems.map(seedToItem);
+    return cachedItems;
+  }
 }
 
-export function addItem(payload: CreateItemPayload): Item {
+/** Fetch a single item by id */
+export async function getItemById(id: string): Promise<Item | null> {
+  const { data, error } = await supabase
+    .from("items")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error || !data) return null;
+  return rowToItem(data);
+}
+
+/** Insert a new item into Supabase, with local fallback */
+export async function addItem(payload: CreateItemPayload): Promise<Item | null> {
   const now = new Date();
+  const listedAt = now.toISOString();
   const expiresAt = new Date(
     now.getTime() + payload.shelfLifeHours * 3_600_000
   );
-  const item: Item = {
-    id: `item_${String(getItems().length + 1).padStart(3, "0")}`,
-    vendorId: "vendor_demo_001",
-    ...payload,
+
+  const row = {
+    vendor_id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d", // demo vendor
+    name: payload.name,
+    description: payload.description ?? "",
+    category: payload.category,
+    base_price: payload.basePrice,
+    unit: payload.unit,
     quantity: payload.quantity ?? 1,
-    imageUrl: payload.imageUrl ?? "",
+    image_url: payload.imageUrl ?? "",
     tags: payload.tags ?? [],
-    shelfLifeHours: payload.shelfLifeHours,
-    listedAt: now.toISOString(),
-    expiresAt: expiresAt.toISOString(),
-    priceFloorPct: 0.2,
+    shelf_life_hours: payload.shelfLifeHours,
+    listed_at: listedAt,
+    expires_at: expiresAt.toISOString(),
+    price_floor_pct: 0.4,
     status: "available",
-    createdAt: now.toISOString(),
-    updatedAt: now.toISOString(),
   };
-  items = [item, ...items];
-  return item;
+
+  try {
+    const { data, error } = await supabase
+      .from("items")
+      .insert(row)
+      .select()
+      .single();
+
+    if (!error && data) {
+      const item = rowToItem(data);
+      if (cachedItems) cachedItems = [item, ...cachedItems];
+      return item;
+    }
+  } catch {
+    // Supabase unavailable — fall through to local item
+  }
+
+  // Local fallback: return an in-memory Item
+  const id = `local_${Date.now()}`;
+  const newItem: Item = {
+    id,
+    vendorId: row.vendor_id,
+    name: row.name,
+    description: row.description,
+    category: row.category as Item["category"],
+    basePrice: row.base_price,
+    unit: row.unit,
+    quantity: row.quantity,
+    imageUrl: row.image_url,
+    tags: row.tags,
+    shelfLifeHours: row.shelf_life_hours,
+    listedAt,
+    expiresAt: row.expires_at,
+    priceFloorPct: row.price_floor_pct,
+    status: "available",
+    createdAt: listedAt,
+    updatedAt: listedAt,
+  };
+  if (cachedItems) cachedItems = [newItem, ...cachedItems];
+  return newItem;
 }
 
-export function claimItem(
+/** Claim an item — update status in Supabase, with local fallback */
+export async function claimItem(
   itemId: string,
   buyerId: string,
   claimedPrice: number
-): Item | null {
-  const idx = getItems().findIndex((i) => i.id === itemId);
-  if (idx === -1) return null;
-  items[idx] = {
-    ...items[idx],
-    status: "claimed",
-    claimedBy: buyerId,
-    claimedAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-  return items[idx];
+): Promise<Item | null> {
+  try {
+    const { data, error } = await supabase
+      .from("items")
+      .update({
+        status: "claimed",
+        claimed_by: buyerId,
+        claimed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", itemId)
+      .select()
+      .single();
+
+    if (!error && data) {
+      // Also insert into claims table
+      await supabase.from("claims").insert({
+        item_id: itemId,
+        buyer_id: buyerId,
+        vendor_id: data.vendor_id,
+        claimed_price: claimedPrice,
+        status: "pending",
+      });
+
+      const item = rowToItem(data);
+      if (cachedItems) cachedItems = cachedItems.map((i) => (i.id === itemId ? item : i));
+      return item;
+    }
+  } catch {
+    // Supabase unavailable — fall through to local fallback
+  }
+
+  // Local fallback: update the cached item
+  const nowIso = new Date().toISOString();
+  if (cachedItems) {
+    const found = cachedItems.find((i) => i.id === itemId);
+    if (found) {
+      const claimed = { ...found, status: "claimed" as const, claimedBy: buyerId, claimedAt: nowIso, updatedAt: nowIso };
+      cachedItems = cachedItems.map((i) => (i.id === itemId ? claimed : i));
+      return claimed;
+    }
+  }
+  return null;
 }

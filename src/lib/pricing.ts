@@ -17,7 +17,7 @@ export function calculateDynamicPrice(
   basePrice: number,
   listedAt: string | Date,
   expiresAt: string | Date,
-  priceFloorPct = 0.2,
+  priceFloorPct = 0.4,
   now: Date = new Date()
 ) {
   const listedMs = new Date(listedAt).getTime();

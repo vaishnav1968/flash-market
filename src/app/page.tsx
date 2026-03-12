@@ -1,29 +1,49 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Marketplace from "@/components/Marketplace";
 import ClaimModal from "@/components/ClaimModal";
 import { getItems, claimItem } from "@/lib/store";
 import type { Item } from "@/lib/types";
 
 export default function HomePage() {
-  const [items, setItems] = useState<Item[]>(() => getItems());
+  const [items, setItems] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState<{
     itemId: string;
     name: string;
     price: number;
   } | null>(null);
 
-  const handleClaim = useCallback((itemId: string, price: number) => {
-    const item = getItems().find((i) => i.id === itemId);
-    if (!item) return;
-    setClaiming({ itemId, name: item.name, price });
+  // Fetch items from Supabase on mount
+  useEffect(() => {
+    getItems().then((data) => {
+      setItems(data);
+      setLoading(false);
+    });
   }, []);
 
-  const confirmClaim = useCallback(() => {
+  const handleClaim = useCallback(
+    (itemId: string, price: number) => {
+      const item = items.find((i) => i.id === itemId);
+      if (!item) return;
+      setClaiming({ itemId, name: item.name, price });
+    },
+    [items]
+  );
+
+  const confirmClaim = useCallback(async () => {
     if (!claiming) return;
-    claimItem(claiming.itemId, "buyer_demo_001", claiming.price);
-    setItems([...getItems()]);
+    const updated = await claimItem(
+      claiming.itemId,
+      "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+      claiming.price
+    );
+    if (updated) {
+      setItems((prev) =>
+        prev.map((i) => (i.id === updated.id ? updated : i))
+      );
+    }
   }, [claiming]);
 
   return (
@@ -59,7 +79,7 @@ export default function HomePage() {
             ).length,
             icon: "🛒",
           },
-          { label: "Price Floor", value: "20%", icon: "🛡️" },
+          { label: "Price Floor", value: "40%", icon: "🛡️" },
         ].map((stat) => (
           <div
             key={stat.label}
@@ -74,7 +94,7 @@ export default function HomePage() {
         ))}
       </div>
 
-      <Marketplace items={items} onClaim={handleClaim} />
+      <Marketplace items={items} onClaim={handleClaim} loading={loading} />
 
       {claiming && (
         <ClaimModal
