@@ -7,21 +7,43 @@ export async function GET(
 ) {
   const { userId } = await context.params;
 
-  const { data, error } = await supabaseAdmin
+  const fullProfile = await supabaseAdmin
     .from("users")
-    .select("id, role, full_name, shop_name, avatar_url")
+    .select("id, role, full_name, shop_name, shop_address, avatar_url, latitude, longitude")
     .eq("id", userId)
     .single();
+
+  let data = fullProfile.data as Record<string, unknown> | null;
+  let error = fullProfile.error;
+
+  if (error) {
+    const basicProfile = await supabaseAdmin
+      .from("users")
+      .select("id, role, full_name, shop_name, avatar_url")
+      .eq("id", userId)
+      .single();
+    data = basicProfile.data as Record<string, unknown> | null;
+    error = basicProfile.error;
+  }
 
   if (error || !data) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
   return NextResponse.json({
-    id: data.id,
+    id: String(data.id),
     role: data.role,
     fullName: data.full_name,
     shopName: data.shop_name,
+    shopAddress: (data.shop_address as string | null | undefined) ?? null,
+    latitude:
+      data.latitude == null || !Number.isFinite(Number(data.latitude))
+        ? null
+        : Number(data.latitude),
+    longitude:
+      data.longitude == null || !Number.isFinite(Number(data.longitude))
+        ? null
+        : Number(data.longitude),
     avatarUrl: data.avatar_url,
   });
 }

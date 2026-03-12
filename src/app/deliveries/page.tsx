@@ -162,12 +162,12 @@ export default function DeliveriesPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-[#0D1117]">
+    <div className="flex min-h-screen flex-col bg-[#0D1117] lg:h-screen">
       {/* Header */}
-      <div className="border-b border-[#21262D] px-6 py-4 bg-[#0D1117]">
+      <div className="border-b border-[#21262D] bg-[#0D1117] px-4 py-4 sm:px-6">
         <div className="flex items-center gap-3 mb-2">
           <Briefcase size={24} className="text-[#FFD150]" />
-          <h1 className="text-[#E6EDF3] text-2xl font-bold font-mono">NEARBY DELIVERIES</h1>
+          <h1 className="text-xl font-bold font-mono text-[#E6EDF3] sm:text-2xl">NEARBY DELIVERIES</h1>
         </div>
         <p className="text-[#8B949E] text-sm font-mono">
           Earn credits by delivering orders · {deliveries.length} available within 10km
@@ -175,9 +175,9 @@ export default function DeliveriesPage() {
       </div>
 
       {/* Main layout: Map + Feed */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden lg:flex-row">
         {/* Left: Map */}
-        <div className="flex-1 border-r border-[#21262D] overflow-hidden" style={{ minHeight: 0 }}>
+        <div className="h-64 overflow-hidden border-b border-[#21262D] sm:h-80 lg:h-auto lg:flex-1 lg:border-b-0 lg:border-r" style={{ minHeight: 0 }}>
           <DeliveryMap
             userLat={latitude}
             userLon={longitude}
@@ -188,7 +188,7 @@ export default function DeliveriesPage() {
         </div>
 
         {/* Right: Feed */}
-        <div className="w-80 overflow-y-auto border-l border-[#21262D] flex flex-col">
+        <div className="flex w-full flex-col overflow-y-auto border-t border-[#21262D] lg:w-80 lg:border-l lg:border-t-0">
           {/* Feed Header */}
           <div className="border-b border-[#21262D] px-4 py-3 bg-[#161B22]">
             <p className="text-[#8B949E] text-xs font-mono">

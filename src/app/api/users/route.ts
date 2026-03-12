@@ -46,44 +46,82 @@ export async function POST(request: Request) {
 			user.email?.split("@")[0] ||
 			"FlashMarket User";
 
-		const { data, error } = await supabaseAdmin
-			.from("users")
-			.upsert(
-				{
-					id: user.id,
-					email: user.email,
-					full_name: fullName,
-					role: body.role,
-					phone: body.phone?.trim() || null,
-					shop_name: body.role === "vendor" ? body.shopName?.trim() || null : null,
-					shop_address:
-						body.role === "vendor" ? body.shopAddress?.trim() || null : null,
-					latitude:
-						body.latitude == null || !Number.isFinite(Number(body.latitude))
-							? null
-							: Number(body.latitude),
-					longitude:
-						body.longitude == null || !Number.isFinite(Number(body.longitude))
-							? null
-							: Number(body.longitude),
-					avatar_url: (user.user_metadata?.avatar_url as string | undefined) ?? null,
-				},
-				{ onConflict: "id" }
-			)
-			.select("id, role, full_name, shop_name, shop_address")
-			.single();
+		const basePayload = {
+			id: user.id,
+			email: user.email,
+			full_name: fullName,
+			role: body.role,
+			phone: body.phone?.trim() || null,
+			shop_name: body.role === "vendor" ? body.shopName?.trim() || null : null,
+			shop_address: body.role === "vendor" ? body.shopAddress?.trim() || null : null,
+			latitude:
+				body.latitude == null || !Number.isFinite(Number(body.latitude))
+					? null
+					: Number(body.latitude),
+			longitude:
+				body.longitude == null || !Number.isFinite(Number(body.longitude))
+					? null
+					: Number(body.longitude),
+			avatar_url: (user.user_metadata?.avatar_url as string | undefined) ?? null,
+		};
 
-		if (error || !data) {
-			console.error("POST /api/users error:", error?.message);
-			return NextResponse.json({ error: "Failed to save user profile" }, { status: 500 });
+		const payloadAttempts: Array<Record<string, unknown>> = [
+			basePayload,
+			// Older schema without location columns
+			(({
+				latitude: _latitude,
+				longitude: _longitude,
+				...rest
+			}) => rest)(basePayload),
+			// Older schema without shop_address
+			(({
+				latitude: _latitude,
+				longitude: _longitude,
+				shop_address: _shopAddress,
+				...rest
+			}) => rest)(basePayload),
+			// Older schema without phone/shop fields
+			(({
+				phone: _phone,
+				shop_name: _shopName,
+				shop_address: _shopAddress,
+				latitude: _latitude,
+				longitude: _longitude,
+				...rest
+			}) => rest)(basePayload),
+		];
+
+		let upsertError: { message: string } | null = null;
+		let usedPayload: Record<string, unknown> | null = null;
+
+		for (const payload of payloadAttempts) {
+			const { error } = await supabaseAdmin
+				.from("users")
+				.upsert(payload, { onConflict: "id" });
+
+			if (!error) {
+				usedPayload = payload;
+				upsertError = null;
+				break;
+			}
+
+			upsertError = error;
+		}
+
+		if (!usedPayload) {
+			console.error("POST /api/users error:", upsertError?.message);
+			return NextResponse.json(
+				{ error: upsertError?.message || "Failed to save user profile" },
+				{ status: 500 }
+			);
 		}
 
 		return NextResponse.json({
-			id: data.id,
-			role: data.role,
-			fullName: data.full_name,
-			shopName: data.shop_name,
-			shopAddress: data.shop_address,
+			id: user.id,
+			role: usedPayload.role,
+			fullName: usedPayload.full_name,
+			shopName: usedPayload.shop_name,
+			shopAddress: usedPayload.shop_address,
 		});
 	} catch (error) {
 		console.error("POST /api/users exception:", error);

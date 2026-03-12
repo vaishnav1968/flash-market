@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import type { Item } from "@/lib/types";
 import { useRealTimePrice } from "@/hooks/useRealTimePrice";
+import { useProductImage } from "@/hooks/useProductImage";
 import { CATEGORY_COLORS } from "@/lib/constants";
 import { LivePriceTicker } from "./LivePriceTicker";
 
@@ -11,15 +12,29 @@ interface Props {
   onClaim: (itemId: string, price: number, quantity: number) => void;
 }
 
-const CATEGORY_EMOJI: Record<string, string> = {
-  cooked_meal: "🍲",
-  fresh_produce: "🥬",
-  dairy: "🧀",
-  baked_goods: "🍞",
+const CATEGORY_FALLBACK_IMAGE: Record<string, string> = {
+  cooked_meal:
+    "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1400&q=80",
+  fresh_produce:
+    "https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&w=1400&q=80",
+  dairy:
+    "https://images.unsplash.com/photo-1563636619-e9143da7973b?auto=format&fit=crop&w=1400&q=80",
+  baked_goods:
+    "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1400&q=80",
 };
 
 export default function ItemCard({ item, onClaim }: Props) {
   const [qty, setQty] = useState(1);
+  // Use only the product name as the query — the API route appends "food photography"
+  // so extra category/tag words don't dilute the search intent.
+  const imageQuery = item.name.trim();
+  const categoryFallback =
+    CATEGORY_FALLBACK_IMAGE[item.category] ??
+    "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=1400&q=80";
+  const { imageUrl } = useProductImage(imageQuery, {
+    fallbackImageUrl: categoryFallback,
+  });
+  const cardImage = item.imageUrl || imageUrl || categoryFallback;
 
   useEffect(() => {
     setQty((q) => Math.min(q, Math.max(1, item.quantity)));
@@ -52,9 +67,14 @@ export default function ItemCard({ item, onClaim }: Props) {
     >
       {/* Header with emoji and status */}
       <div className="flex items-start gap-3 p-4 pb-2">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-2xl">
-          {CATEGORY_EMOJI[item.category] ?? "🍱"}
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={cardImage}
+          alt={item.name}
+          className="h-12 w-12 shrink-0 rounded-lg object-cover bg-gray-100"
+          loading="lazy"
+          referrerPolicy="no-referrer"
+        />
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <div>
@@ -120,9 +140,9 @@ export default function ItemCard({ item, onClaim }: Props) {
 
       {/* Controls */}
       <div className="mt-auto border-t border-gray-200 px-4 py-3">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-between">
           {item.quantity > 1 && !isUnavailable ? (
-            <div className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center gap-1">
               <button
                 type="button"
                 onClick={() => setQty((q) => Math.max(1, q - 1))}
@@ -148,7 +168,7 @@ export default function ItemCard({ item, onClaim }: Props) {
           <button
             disabled={isUnavailable}
             onClick={() => onClaim(item.id, currentPrice * qty, qty)}
-            className={`rounded-lg px-3 py-2 text-xs font-bold transition-all ${
+            className={`w-full rounded-lg px-3 py-2 text-xs font-bold transition-all sm:w-auto ${
               isUnavailable
                 ? "cursor-not-allowed border border-gray-200 bg-gray-100 text-gray-400"
                 : "border border-[#458B73] bg-[#458B73] text-white hover:bg-[#458B73]/90 active:scale-95"

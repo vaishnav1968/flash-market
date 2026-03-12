@@ -23,7 +23,7 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/80 backdrop-blur-md">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-y-2 px-4 py-3 sm:flex-nowrap sm:gap-y-0 sm:px-6">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
           <span className="text-2xl">⚡</span>
@@ -33,7 +33,7 @@ export default function Navbar() {
         </Link>
 
         {/* Nav links */}
-        <nav className="flex items-center gap-1">
+        <nav className="order-3 flex w-full items-center gap-1 overflow-x-auto whitespace-nowrap pb-1 hide-scrollbar sm:order-none sm:w-auto sm:overflow-visible sm:pb-0">
           {navLinks.map(({ href, label }) => (
             <Link
               key={href}
@@ -50,10 +50,12 @@ export default function Navbar() {
         </nav>
 
         {/* Notification bell (vendors only) */}
-        <NotificationBell />
+        <div className="order-2 sm:order-none">
+          <NotificationBell />
+        </div>
 
         {/* Auth */}
-        <div className="flex items-center gap-2">
+        <div className="order-2 flex items-center gap-2 sm:order-none">
           {loading ? (
             <span className="text-lg animate-pulse">⚡</span>
           ) : user ? (

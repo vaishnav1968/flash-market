@@ -21,6 +21,7 @@ export default function VendorPage() {
   const { user, role, loading: authLoading, session, signInWithGoogle } = useAuth();
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasSavedLocation, setHasSavedLocation] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -29,6 +30,39 @@ export default function VendorPage() {
       setLoading(false);
     });
   }, [user]);
+
+  useEffect(() => {
+    if (!user || role !== "vendor") return;
+    const userId = user.id;
+
+    let active = true;
+
+    async function checkVendorLocation() {
+      try {
+        const response = await fetch(`/api/users/${userId}`);
+        if (!response.ok) {
+          if (active) setHasSavedLocation(false);
+          return;
+        }
+
+        const data = (await response.json()) as {
+          latitude?: number | null;
+          longitude?: number | null;
+        };
+
+        if (!active) return;
+        setHasSavedLocation(data.latitude != null && data.longitude != null);
+      } catch {
+        if (active) setHasSavedLocation(false);
+      }
+    }
+
+    checkVendorLocation();
+
+    return () => {
+      active = false;
+    };
+  }, [user, role]);
 
   async function handleSubmit(payload: CreateItemPayload) {
     if (!session) return;
@@ -150,8 +184,23 @@ export default function VendorPage() {
         </span>
       </div>
 
+      {hasSavedLocation === false && (
+        <div className="mb-6 rounded-xl border border-[#FFD150]/40 bg-[#FFF8EC] px-4 py-3 text-sm text-[#8A5A00]">
+          <p className="font-semibold">Delivery is currently disabled for your listings.</p>
+          <p className="mt-1">
+            Add your shop location to enable buyer delivery quotes and the distance-based fee.
+          </p>
+          <Link
+            href="/auth/role"
+            className="mt-2 inline-block font-semibold text-[#F26076] hover:text-[#d84f63]"
+          >
+            Update vendor profile →
+          </Link>
+        </div>
+      )}
+
       {/* Stats row — bento 3D cards */}
-      <div className="mb-8 grid grid-cols-3 gap-3">
+      <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
         {[
           { label: "Live listings", value: liveCount, icon: "🟢", color: "text-[#458B73]", bg: "bg-[#EEF6F3]" },
           { label: "Sold out", value: soldCount, icon: "🛒", color: "text-[#F26076]", bg: "bg-[#FFF0F3]" },
@@ -209,7 +258,7 @@ export default function VendorPage() {
                 return (
                   <div
                     key={item.id}
-                    className={`flex items-center justify-between rounded-xl p-4 shadow-sm ring-1 transition-colors ${
+                    className={`flex flex-col items-start gap-3 rounded-xl p-4 shadow-sm ring-1 transition-colors sm:flex-row sm:items-center sm:justify-between ${
                       isSoldOut
                         ? "bg-gray-50 ring-gray-100 opacity-50"
                         : pricing.expired
@@ -250,8 +299,8 @@ export default function VendorPage() {
                       </div>
                     </div>
 
-                    <div className="text-right">
-                      <div className="flex items-center justify-end gap-3">
+                    <div className="w-full text-left sm:w-auto sm:text-right">
+                      <div className="flex items-center justify-start gap-3 sm:justify-end">
                         <MiniSparkline
                           basePrice={item.basePrice}
                           listedAt={item.listedAt}
