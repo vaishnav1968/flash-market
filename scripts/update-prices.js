@@ -1,10 +1,19 @@
 // Quick script to update Supabase items to INR prices
 const { createClient } = require("@supabase/supabase-js");
 
-const supabase = createClient(
-  "https://ifhkuzqbangwspiobxoz.supabase.co",
-  "sb_secret_Y8RY38q06102NwGNIFF7EQ_WdxxJAdt"
-);
+const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_ANON_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error(
+    "Missing SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (preferred), or fallback Supabase env vars"
+  );
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const priceUpdates = [
   { id: "d0000001-0000-4000-a000-000000000001", base_price: 180 },
