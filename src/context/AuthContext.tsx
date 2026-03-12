@@ -22,6 +22,19 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function getAuthRedirectBaseUrl() {
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (configured) {
+    return configured.replace(/\/$/, "");
+  }
+
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
+
+  return "";
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<"vendor" | "buyer" | null>(null);
@@ -73,10 +86,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [fetchRole]);
 
   async function signInWithGoogle() {
+    const baseUrl = getAuthRedirectBaseUrl();
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${baseUrl}/auth/callback`,
       },
     });
   }
