@@ -39,8 +39,8 @@ public/
 CurrentPrice = BasePrice × max(TimeRemaining / TotalWindow, FloorPct)
 ```
 
-- **FloorPct** = 0.20 (20%) — vendors always cover basic costs
-- Price decays linearly from 100% → 20% over the shelf-life window
+- **FloorPct** = 0.40 (40%) — vendors always cover basic costs
+- Price decays linearly from 100% → 40% over the shelf-life window
 - `useRealTimePrice` hook recalculates every second for live UI updates
 
 ## Getting Started
