@@ -67,14 +67,14 @@ export default function VendorDashboard({ onSubmit }: Props) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="mx-auto max-w-2xl space-y-6 rounded-2xl bg-white p-6 shadow-lg ring-1 ring-gray-100"
+      className="mx-auto max-w-2xl space-y-6 rounded-2xl bg-white p-6 shadow-lg ring-2 ring-[#FFD150]/60"
     >
-      <h2 className="text-xl font-bold text-gray-900">
+      <h2 className="text-xl font-bold text-[#F26076]">
         📦 Upload New Item
       </h2>
 
       {submitted && (
-        <div className="rounded-lg bg-green-50 p-3 text-sm font-medium text-green-700">
+        <div className="rounded-lg bg-[#458B73]/10 p-3 text-sm font-medium text-[#458B73]">
           ✅ Item listed successfully! It&apos;s now live on the marketplace.
         </div>
       )}
@@ -90,7 +90,7 @@ export default function VendorDashboard({ onSubmit }: Props) {
           onChange={handleChange}
           required
           placeholder="e.g. Chicken Shawarma Wrap"
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#FF9760] focus:outline-none focus:ring-1 focus:ring-[#FF9760]"
         />
       </div>
 
@@ -105,7 +105,7 @@ export default function VendorDashboard({ onSubmit }: Props) {
           onChange={handleChange}
           rows={2}
           placeholder="Brief description of the item…"
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#FF9760] focus:outline-none focus:ring-1 focus:ring-[#FF9760]"
         />
       </div>
 
@@ -119,7 +119,7 @@ export default function VendorDashboard({ onSubmit }: Props) {
             name="category"
             value={form.category}
             onChange={handleChange}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#FF9760] focus:outline-none focus:ring-1 focus:ring-[#FF9760]"
           >
             {Object.entries(CATEGORY_LABELS).map(([val, label]) => (
               <option key={val} value={val}>
@@ -137,7 +137,7 @@ export default function VendorDashboard({ onSubmit }: Props) {
             value={form.unit}
             onChange={handleChange}
             placeholder="piece, cup, plate…"
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#FF9760] focus:outline-none focus:ring-1 focus:ring-[#FF9760]"
           />
         </div>
       </div>
@@ -156,7 +156,7 @@ export default function VendorDashboard({ onSubmit }: Props) {
             value={form.basePrice || ""}
             onChange={handleChange}
             required
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#FF9760] focus:outline-none focus:ring-1 focus:ring-[#FF9760]"
           />
         </div>
         <div>
@@ -169,7 +169,7 @@ export default function VendorDashboard({ onSubmit }: Props) {
             min="1"
             value={form.quantity}
             onChange={handleChange}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#FF9760] focus:outline-none focus:ring-1 focus:ring-[#FF9760]"
           />
         </div>
         <div>
@@ -183,7 +183,7 @@ export default function VendorDashboard({ onSubmit }: Props) {
             min="0.5"
             value={form.shelfLifeHours}
             onChange={handleChange}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#FF9760] focus:outline-none focus:ring-1 focus:ring-[#FF9760]"
           />
         </div>
       </div>
@@ -204,12 +204,12 @@ export default function VendorDashboard({ onSubmit }: Props) {
               }
             }}
             placeholder="Add a tag…"
-            className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#FF9760] focus:outline-none focus:ring-1 focus:ring-[#FF9760]"
           />
           <button
             type="button"
             onClick={addTag}
-            className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+            className="rounded-lg bg-[#FFD150] px-3 py-2 text-sm font-medium text-gray-800 hover:bg-[#FFD150]/80"
           >
             Add
           </button>
@@ -219,13 +219,13 @@ export default function VendorDashboard({ onSubmit }: Props) {
             {form.tags.map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700"
+              className="inline-flex items-center gap-1 rounded-full bg-[#FFD150]/40 px-2.5 py-0.5 text-xs font-medium text-gray-800"
               >
                 {tag}
                 <button
                   type="button"
                   onClick={() => removeTag(tag)}
-                  className="ml-0.5 text-emerald-500 hover:text-emerald-800"
+                  className="ml-0.5 text-[#458B73] hover:text-[#F26076]"
                 >
                   ×
                 </button>
@@ -236,19 +236,19 @@ export default function VendorDashboard({ onSubmit }: Props) {
       </div>
 
       {/* Price preview */}
-      <div className="rounded-lg bg-gray-50 p-4">
-        <p className="text-xs font-medium text-gray-500 uppercase">
+      <div className="rounded-lg bg-[#FFD150]/20 p-4 ring-1 ring-[#FFD150]">
+        <p className="text-xs font-medium text-[#FF9760] uppercase">
           Pricing Preview
         </p>
         <p className="mt-1 text-sm text-gray-700">
           Base: <span className="font-bold">₹{form.basePrice.toFixed(2)}</span>
           {" → "}
           Floor (40%):{" "}
-          <span className="font-bold text-emerald-600">
+          <span className="font-bold text-[#FF9760]">
             ₹{(form.basePrice * 0.4).toFixed(2)}
           </span>
         </p>
-        <p className="mt-0.5 text-xs text-gray-500">
+        <p className="mt-0.5 text-xs text-[#458B73]">
           Price will decay linearly over {form.shelfLifeHours}h, never below the
           40% floor.
         </p>
@@ -256,7 +256,7 @@ export default function VendorDashboard({ onSubmit }: Props) {
 
       <button
         type="submit"
-        className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors"
+        className="w-full rounded-lg bg-[#F26076] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#FF9760] focus:outline-none focus:ring-2 focus:ring-[#FFD150] focus:ring-offset-2 transition-colors"
       >
         🚀 List Item on FlashMarket
       </button>

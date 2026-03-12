@@ -1,6 +1,9 @@
 // ── Category helpers ──
 import type { ItemCategory } from "@/lib/types";
 
+/** Platform commission deducted from the vendor on every claim (3.5 %) */
+export const PLATFORM_COMMISSION_PCT = 0.035;
+
 export const CATEGORY_LABELS: Record<ItemCategory, string> = {
   cooked_meal: "🍲 Cooked Meals",
   fresh_produce: "🥬 Fresh Produce",

@@ -23,9 +23,16 @@ export type ItemCategory =
 
 export type ItemStatus = "available" | "claimed" | "sold" | "expired";
 
+export type FulfillmentMethod = "pickup" | "delivery";
+
 export interface Item {
   id: string;
   vendorId: string;
+  vendorName?: string;
+  vendorShopName?: string;
+  vendorAddress?: string;
+  vendorLatitude?: number;
+  vendorLongitude?: number;
   name: string;
   description?: string;
   category: ItemCategory;
@@ -56,6 +63,7 @@ export interface Claim {
   buyerId: string;
   vendorId: string;
   claimedPrice: number;
+  fulfillmentMethod?: FulfillmentMethod;
   status: "pending" | "completed" | "cancelled";
   claimedAt: string;
   completedAt?: string;
@@ -72,4 +80,31 @@ export interface CreateItemPayload {
   shelfLifeHours: number;
   imageUrl?: string;
   tags: string[];
+}
+
+// ── P2P Delivery System ──
+
+export type DeliveryStatus = "available" | "picked_up" | "completed" | "cancelled";
+
+export interface Delivery {
+  id: string;
+  claimId: string;
+  delivererId?: string; // null if still available
+  vendorId: string;
+  creditReward: number;
+  status: DeliveryStatus;
+  pickupLat: number;
+  pickupLon: number;
+  dropoffLat: number;
+  dropoffLon: number;
+  createdAt: string;
+  pickedUpAt?: string;
+  completedAt?: string;
+}
+
+export interface NearbyDelivery extends Delivery {
+  itemName: string;
+  vendorName: string;
+  claimedPrice: number;
+  distance: number; // in kilometers
 }

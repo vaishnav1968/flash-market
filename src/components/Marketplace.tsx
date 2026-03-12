@@ -33,18 +33,15 @@ export default function Marketplace({ items, onClaim, loading }: Props) {
 
   return (
     <div>
-      {/* Controls */}
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      {/* Search and filters */}
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         {/* Search */}
         <div className="relative w-full sm:max-w-xs">
-          <span className="absolute inset-y-0 left-3 flex items-center text-gray-400">
-            🔍
-          </span>
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search items…"
-            className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            placeholder="Search by name or tag…"
+            className="w-full rounded-lg border border-gray-300 bg-white py-2 px-4 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#458B73] focus:outline-none focus:ring-1 focus:ring-[#458B73]"
           />
         </div>
 
@@ -52,10 +49,10 @@ export default function Marketplace({ items, onClaim, loading }: Props) {
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setFilter(ALL)}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
               filter === ALL
-                ? "bg-emerald-600 text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                ? "bg-[#458B73] text-white"
+                : "border border-gray-300 text-gray-700 hover:border-[#458B73] hover:text-[#458B73]"
             }`}
           >
             All
@@ -64,10 +61,10 @@ export default function Marketplace({ items, onClaim, loading }: Props) {
             <button
               key={key}
               onClick={() => setFilter(key as ItemCategory)}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                 filter === key
-                  ? "bg-emerald-600 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? "bg-[#458B73] text-white"
+                  : "border border-gray-300 text-gray-700 hover:border-[#458B73] hover:text-[#458B73]"
               }`}
             >
               {label}
@@ -78,14 +75,14 @@ export default function Marketplace({ items, onClaim, loading }: Props) {
 
       {/* Grid */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-          <span className="text-4xl mb-2 animate-pulse">⚡</span>
-          <p className="text-sm">Loading items from Supabase…</p>
+        <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+          <span className="mb-2 animate-pulse text-4xl">⚡</span>
+          <p className="text-sm font-medium">Loading items…</p>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-          <span className="text-4xl mb-2">🔎</span>
-          <p className="text-sm">No items found.</p>
+        <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+          <span className="mb-2 text-4xl">🔍</span>
+          <p className="text-sm font-medium">No items found.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

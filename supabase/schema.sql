@@ -15,6 +15,10 @@ CREATE TABLE public.users (
   phone         TEXT,
   shop_name     TEXT,             -- only for vendors
   shop_address  TEXT,             -- only for vendors
+  telegram_chat_id TEXT,          -- optional: Telegram chat ID for claim notifications
+  credits       NUMERIC(12,2) NOT NULL DEFAULT 0,  -- delivery credits earned
+  latitude      NUMERIC(10,8),    -- geolocation for nearby deliveries
+  longitude     NUMERIC(11,8),    -- geolocation for nearby deliveries
   avatar_url    TEXT,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -99,6 +103,8 @@ CREATE TABLE public.claims (
   buyer_id      UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   vendor_id     UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   claimed_price NUMERIC(10,2) NOT NULL,
+  platform_fee  NUMERIC(10,2) NOT NULL DEFAULT 0,  -- 3.5% of claimed_price
+  vendor_payout NUMERIC(10,2) NOT NULL DEFAULT 0,  -- claimed_price - platform_fee
   status        TEXT NOT NULL DEFAULT 'pending'
                   CHECK (status IN ('pending','completed','cancelled')),
   claimed_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -120,8 +126,68 @@ CREATE POLICY "Buyers can create claims"
   WITH CHECK (auth.uid() = buyer_id);
 
 -- ╔══════════════════════════════════════════════════════╗
--- ║  FUNCTION: auto-set expires_at on insert            ║
+-- ║  DELIVERIES (P2P Delivery System)                   ║
 -- ╚══════════════════════════════════════════════════════╝
+CREATE TABLE public.deliveries (
+  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  claim_id      UUID NOT NULL REFERENCES public.claims(id) ON DELETE CASCADE,
+  deliverer_id  UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  vendor_id     UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  credit_reward NUMERIC(12,2) NOT NULL,  -- credits awarded on completion
+  status        TEXT NOT NULL DEFAULT 'available'
+                  CHECK (status IN ('available','picked_up','completed','cancelled')),
+  pickup_lat    NUMERIC(10,8),    -- vendor location
+  pickup_lon    NUMERIC(11,8),
+  dropoff_lat   NUMERIC(10,8),    -- buyer location
+  dropoff_lon   NUMERIC(11,8),
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  picked_up_at  TIMESTAMPTZ,
+  completed_at  TIMESTAMPTZ
+);
+
+CREATE INDEX idx_deliveries_status ON public.deliveries(status);
+CREATE INDEX idx_deliveries_deliverer ON public.deliveries(deliverer_id);
+
+ALTER TABLE public.deliveries ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can view available deliveries"
+  ON public.deliveries FOR SELECT
+  USING (status = 'available');
+
+CREATE POLICY "Deliverers can view their own deliveries"
+  ON public.deliveries FOR SELECT
+  USING (auth.uid() = deliverer_id);
+
+CREATE POLICY "Vendors can view deliveries for their items"
+  ON public.deliveries FOR SELECT
+  USING (auth.uid() = vendor_id);
+
+CREATE POLICY "Users can claim available deliveries"
+  ON public.deliveries FOR UPDATE
+  USING (status = 'available');
+
+-- ╔══════════════════════════════════════════════════════╗
+-- ║  FUNCTION: transfer credits on delivery completion  ║
+-- ╚══════════════════════════════════════════════════════╝
+CREATE OR REPLACE FUNCTION process_delivery_completion()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.status = 'completed' AND OLD.status != 'completed' THEN
+    -- Transfer credit_reward to deliverer's credits balance
+    UPDATE public.users
+    SET credits = credits + NEW.credit_reward
+    WHERE id = NEW.deliverer_id;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_process_delivery_completion
+  AFTER UPDATE ON public.deliveries
+  FOR EACH ROW
+  EXECUTE FUNCTION process_delivery_completion();
+
+
 CREATE OR REPLACE FUNCTION set_expires_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -148,5 +214,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Enable Supabase Realtime on items table
+-- Enable Supabase Realtime on items, claims, and deliveries tables
 ALTER PUBLICATION supabase_realtime ADD TABLE public.items;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.claims;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.deliveries;

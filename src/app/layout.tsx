@@ -1,9 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Space_Mono } from "next/font/google";
 import "./globals.css";
 import ClientShell from "@/components/ClientShell";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const spaceMono = Space_Mono({
+  weight: ["400", "700"],
+  subsets: ["latin"],
+  variable: "--font-space-mono",
+});
 
 export const metadata: Metadata = {
   title: "FlashMarket — Surplus Perishable Food, Flash Prices",
@@ -31,7 +36,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased bg-gray-50 text-gray-900`}>
+      <body className={`${inter.variable} ${spaceMono.variable} font-sans antialiased bg-gray-50 text-gray-900`}>
         <ClientShell>{children}</ClientShell>
       </body>
     </html>

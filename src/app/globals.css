@@ -2,7 +2,11 @@
 
 @theme inline {
   --font-sans: var(--font-inter);
-  --color-emerald-600: #059669;
+  --font-mono: var(--font-space-mono);
+  --color-brand-primary: #458B73;
+  --color-brand-alert: #F26076;
+  --color-brand-secondary: #FF9760;
+  --color-brand-accent: #FFD150;
 }
 
 body {
@@ -10,15 +14,48 @@ body {
   color: #111827;
 }
 
-/* Smooth price transitions */
+/* ── Terminal buyer theme ─────────────────────────────────────────── */
+
+/* Price slide-in: used by LivePriceTicker via key remount */
+@keyframes tick-in {
+  from { transform: translateY(6px); opacity: 0; }
+  to   { transform: translateY(0);   opacity: 1; }
+}
+.animate-tick-in {
+  animation: tick-in 0.18s ease-out forwards;
+}
+
+/* Cursor blink for terminal prompts */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+.animate-blink {
+  animation: blink 1.1s step-end infinite;
+}
+
+/* ── Vendor bento 3D press buttons ───────────────────────────────── */
+.btn-3d {
+  box-shadow: 0 4px 0 rgba(0,0,0,0.25), 0 6px 12px rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+  transition: box-shadow 0.1s ease, transform 0.1s ease;
+}
+.btn-3d:hover {
+  box-shadow: 0 5px 0 rgba(0,0,0,0.22), 0 8px 16px rgba(0,0,0,0.18);
+  transform: translateY(-3px);
+}
+.btn-3d:active {
+  box-shadow: 0 1px 0 rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.12);
+  transform: translateY(2px);
+}
+
+/* ── Smooth price transitions ─────────────────────────────────────── */
 .price-flash {
   transition: color 0.3s ease;
 }
 
 /* Hide scrollbar on filter bars */
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
-}
+.hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;

@@ -1,6 +1,12 @@
 // ── FlashMarket — Supabase-backed store (with local fallback) ──
 
-import type { CreateItemPayload, Item } from "@/lib/types";
+import type { CreateItemPayload, FulfillmentMethod, Item } from "@/lib/types";
+
+interface ClaimItemOptions {
+  fulfillmentMethod: FulfillmentMethod;
+  buyerLatitude?: number;
+  buyerLongitude?: number;
+}
 
 async function parseJson<T>(response: Response): Promise<T | null> {
   try {
@@ -24,11 +30,15 @@ export async function getItems(): Promise<Item[]> {
   return (await parseJson<Item[]>(response)) ?? [];
 }
 
-export async function addItem(payload: CreateItemPayload): Promise<Item | null> {
+export async function addItem(
+  payload: CreateItemPayload,
+  accessToken: string
+): Promise<Item | null> {
   const response = await fetch("/api/items", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify(payload),
   });
@@ -44,16 +54,26 @@ export async function addItem(payload: CreateItemPayload): Promise<Item | null> 
 
 export async function claimItem(
   itemId: string,
-  buyerId: string,
   claimedPrice: number,
-  claimQty: number = 1
+  claimQty: number = 1,
+  accessToken?: string,
+  options?: ClaimItemOptions
 ): Promise<Item | null> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+
   const response = await fetch(`/api/items/${itemId}/claim`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ buyerId, claimedPrice, claimQty }),
+    headers,
+    body: JSON.stringify({
+      claimedPrice,
+      claimQty,
+      fulfillmentMethod: options?.fulfillmentMethod ?? "pickup",
+      buyerLatitude: options?.buyerLatitude,
+      buyerLongitude: options?.buyerLongitude,
+    }),
   });
 
   if (!response.ok) {
@@ -62,5 +82,10 @@ export async function claimItem(
     return null;
   }
 
-  return await parseJson<Item>(response);
+  const data = await parseJson<unknown>(response);
+  if (!data) return null;
+  if (typeof data === "object" && data !== null && "item" in data) {
+    return (data as { item?: Item }).item ?? null;
+  }
+  return data as Item;
 }
