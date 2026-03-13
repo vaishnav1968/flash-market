@@ -17,6 +17,17 @@ export async function GET(
   let error = fullProfile.error;
 
   if (error) {
+    const coordsProfile = await supabaseAdmin
+      .from("users")
+      .select("id, role, full_name, shop_name, avatar_url, latitude, longitude")
+      .eq("id", userId)
+      .single();
+
+    data = coordsProfile.data as Record<string, unknown> | null;
+    error = coordsProfile.error;
+  }
+
+  if (error) {
     const basicProfile = await supabaseAdmin
       .from("users")
       .select("id, role, full_name, shop_name, avatar_url")

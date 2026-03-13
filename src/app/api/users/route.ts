@@ -67,17 +67,19 @@ export async function POST(request: Request) {
 
 		const payloadAttempts: Array<Record<string, unknown>> = [
 			basePayload,
+			// Older schema without shop_address column: keep coordinates.
+			(({ shop_address: _shopAddress, ...rest }) => rest)(basePayload),
 			// Older schema without location columns
 			(({
 				latitude: _latitude,
 				longitude: _longitude,
 				...rest
 			}) => rest)(basePayload),
-			// Older schema without shop_address
+			// Older schema without both shop_address and location columns
 			(({
+				shop_address: _shopAddress,
 				latitude: _latitude,
 				longitude: _longitude,
-				shop_address: _shopAddress,
 				...rest
 			}) => rest)(basePayload),
 			// Older schema without phone/shop fields
