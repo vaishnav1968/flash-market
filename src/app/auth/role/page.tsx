@@ -95,10 +95,23 @@ export default function RoleSelectionPage() {
 				}),
 			});
 
-			const data = (await response.json()) as { error?: string };
+			const data = (await response.json()) as {
+				error?: string;
+				latitude?: number | null;
+				longitude?: number | null;
+			};
 
 			if (!response.ok) {
 				throw new Error(data.error || "Failed to save profile");
+			}
+
+			if (
+				role === "vendor" &&
+				(data.latitude == null || data.longitude == null)
+			) {
+				throw new Error(
+					"Coordinates were not saved in Supabase. Please retry and ensure users.latitude/users.longitude exist."
+				);
 			}
 
 			await refreshRole();

@@ -46,6 +46,15 @@ export async function POST(request: Request) {
 			user.email?.split("@")[0] ||
 			"FlashMarket User";
 
+		const requestedLatitude =
+			body.latitude == null || !Number.isFinite(Number(body.latitude))
+				? null
+				: Number(body.latitude);
+		const requestedLongitude =
+			body.longitude == null || !Number.isFinite(Number(body.longitude))
+				? null
+				: Number(body.longitude);
+
 		const basePayload = {
 			id: user.id,
 			email: user.email,
@@ -54,14 +63,8 @@ export async function POST(request: Request) {
 			phone: body.phone?.trim() || null,
 			shop_name: body.role === "vendor" ? body.shopName?.trim() || null : null,
 			shop_address: body.role === "vendor" ? body.shopAddress?.trim() || null : null,
-			latitude:
-				body.latitude == null || !Number.isFinite(Number(body.latitude))
-					? null
-					: Number(body.latitude),
-			longitude:
-				body.longitude == null || !Number.isFinite(Number(body.longitude))
-					? null
-					: Number(body.longitude),
+			latitude: requestedLatitude,
+			longitude: requestedLongitude,
 			avatar_url: (user.user_metadata?.avatar_url as string | undefined) ?? null,
 		};
 
@@ -118,12 +121,86 @@ export async function POST(request: Request) {
 			);
 		}
 
+		if (
+			body.role === "vendor" &&
+			requestedLatitude != null &&
+			requestedLongitude != null
+		) {
+			const { error: coordUpdateError } = await supabaseAdmin
+				.from("users")
+				.update({
+					latitude: requestedLatitude,
+					longitude: requestedLongitude,
+					updated_at: new Date().toISOString(),
+				})
+				.eq("id", user.id);
+
+			if (coordUpdateError) {
+				console.error(
+					"POST /api/users coordinate update error:",
+					coordUpdateError.message
+				);
+			}
+		}
+
+		const verifyFull = await supabaseAdmin
+			.from("users")
+			.select("id, role, full_name, shop_name, shop_address, latitude, longitude")
+			.eq("id", user.id)
+			.single();
+
+		let saved = verifyFull.data as Record<string, unknown> | null;
+		let verifyError = verifyFull.error;
+
+		if (verifyError) {
+			const verifyCoords = await supabaseAdmin
+				.from("users")
+				.select("id, role, full_name, shop_name, latitude, longitude")
+				.eq("id", user.id)
+				.single();
+			saved = verifyCoords.data as Record<string, unknown> | null;
+			verifyError = verifyCoords.error;
+		}
+
+		if (verifyError || !saved) {
+			return NextResponse.json(
+				{ error: "Profile saved but verification failed. Please retry." },
+				{ status: 500 }
+			);
+		}
+
+		const savedLatitude =
+			saved.latitude == null || !Number.isFinite(Number(saved.latitude))
+				? null
+				: Number(saved.latitude);
+		const savedLongitude =
+			saved.longitude == null || !Number.isFinite(Number(saved.longitude))
+				? null
+				: Number(saved.longitude);
+
+		if (
+			body.role === "vendor" &&
+			requestedLatitude != null &&
+			requestedLongitude != null &&
+			(savedLatitude == null || savedLongitude == null)
+		) {
+			return NextResponse.json(
+				{
+					error:
+						"Coordinates could not be saved in Supabase. Check that users.latitude and users.longitude columns exist and redeploy.",
+				},
+				{ status: 500 }
+			);
+		}
+
 		return NextResponse.json({
 			id: user.id,
-			role: usedPayload.role,
-			fullName: usedPayload.full_name,
-			shopName: usedPayload.shop_name,
-			shopAddress: usedPayload.shop_address,
+			role: saved.role,
+			fullName: saved.full_name,
+			shopName: saved.shop_name,
+			shopAddress: (saved.shop_address as string | null | undefined) ?? null,
+			latitude: savedLatitude,
+			longitude: savedLongitude,
 		});
 	} catch (error) {
 		console.error("POST /api/users exception:", error);
