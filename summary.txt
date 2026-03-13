@@ -1,0 +1,151 @@
+FlashMarket - Hackathon Project Summary
+=======================================
+
+1) One-line Pitch
+FlashMarket is a real-time marketplace for surplus perishable food where prices automatically drop as expiry approaches, helping vendors reduce waste and helping buyers get affordable food deals.
+
+
+2) Problem We Are Solving
+- Local food vendors often throw away unsold perishable items at the end of the day.
+- Buyers miss out on good food because they do not know what is available nearby in time.
+- Traditional e-commerce is not optimized for short shelf-life products.
+
+
+3) Our Solution
+FlashMarket connects vendors and buyers through a live marketplace:
+- Vendors list perishable items with quantity, shelf life, and base price.
+- A dynamic pricing engine reduces price over time until expiry.
+- Buyers can claim items quickly before they expire.
+- Buyers can choose pickup or delivery (distance-based fee).
+- Delivery opportunities can be claimed by nearby users on a map.
+
+
+4) Core Features
+A) Real-time Dynamic Pricing
+- Price updates as time passes.
+- Formula concept: price decays from base price to a floor price before expiry.
+- Helps clear inventory faster and reduce food waste.
+
+B) Vendor Dashboard
+- Add and manage listings in seconds.
+- Track live listings, sold-out count, and stock units.
+- Vendor profile includes location for delivery quote support.
+
+C) Buyer Marketplace
+- Browse cards with live countdown and current discount.
+- Search and category filters.
+- Claim flow with quantity selection.
+
+D) Claim Flow with Fulfillment Choice
+- Option 1: Pickup (pay at vendor shop).
+- Option 2: Delivery (fee based on distance).
+- Delivery fee logic: distance_km x 11.
+
+E) Nearby Delivery Map
+- Shows available deliveries around user location.
+- Claim and complete deliveries.
+- Credit reward system for deliverers.
+
+F) Authentication and Roles
+- Google login via Supabase Auth.
+- Role-based flow for buyer and vendor.
+- Guest route support for non-logged-in users.
+
+
+5) Tech Stack
+- Frontend: Next.js 16 (App Router), React, Tailwind CSS, TypeScript
+- Backend/API: Next.js API routes
+- Database/Auth: Supabase (Postgres + Auth)
+- Maps: react-map-gl / maplibre-gl
+- Notifications: Resend-ready integration
+- Deployment: Netlify with Next.js runtime plugin
+
+
+6) System Design (Simple)
+Client (Web/PWA)
+  -> Next.js App UI (Marketplace, Vendor Dashboard, Delivery Map)
+  -> Next.js API Routes (/api/items, /api/items/[id]/claim, /api/deliveries/*, /api/users/*)
+  -> Supabase (users, items, claims, deliveries)
+
+Key Data Tables:
+- users: profile, role, location, credits
+- items: listing details, price basis, status, expiry
+- claims: buyer claims and payout split
+- deliveries: delivery tasks and rewards
+
+
+7) Why This Is Innovative for Hackathon
+- Tackles food waste + affordability (social impact + business viability).
+- Real-time urgency model (time-decay pricing).
+- End-to-end flow: listing -> dynamic pricing -> claim -> optional delivery.
+- Practical for local adoption by street-food and small vendors.
+
+
+8) Demo Script (2-3 Minutes)
+1. Open guest marketplace and show live decreasing prices.
+2. Sign in with Google.
+3. As vendor: add a perishable item.
+4. As buyer: claim item with pickup or delivery.
+5. Show delivery fee quote using distance.
+6. Open delivery map and claim a nearby delivery task.
+7. Conclude with impact: less waste, faster sell-through, cheaper food.
+
+
+9) Impact Metrics to Mention
+- Waste reduction: unsold perishables sold before expiry.
+- Vendor benefit: improved recovery from end-of-day stock.
+- Buyer benefit: lower prices on quality food.
+- Community effect: local micro-delivery earning opportunity.
+
+
+10) Business / Future Scope
+- Smart demand forecasting and auto-listing suggestions.
+- Reputation and trust scoring for vendors/deliverers.
+- Route optimization for multi-drop deliveries.
+- Local language support.
+- Merchant analytics dashboard and subscription model.
+
+
+11) PPT Slide Outline (Ready to Use)
+Slide 1: Title
+- FlashMarket: Real-Time Surplus Food Marketplace
+- Team name + hackathon name
+
+Slide 2: Problem
+- Food waste at vendor level
+- Missed affordability opportunities for buyers
+
+Slide 3: Solution
+- Dynamic pricing + instant claims + optional delivery
+
+Slide 4: Product Walkthrough
+- Vendor dashboard
+- Buyer marketplace
+- Claim modal
+- Delivery map
+
+Slide 5: Architecture
+- Next.js + API routes + Supabase + Netlify
+
+Slide 6: Technical Highlights
+- Time-decay pricing engine
+- Role-based auth
+- Delivery distance fee and geolocation
+
+Slide 7: Impact
+- Waste reduced
+- Better vendor recovery
+- Affordable food access
+
+Slide 8: Future Roadmap
+- AI demand forecasts
+- Trust/reputation
+- Route optimization
+
+Slide 9: Closing
+- "From food waste to food value in real time"
+- Thank you + Q&A
+
+
+12) Short Closing Statement
+FlashMarket turns expiring inventory into real-time opportunity. Vendors recover value, buyers save money, and communities reduce food waste through a simple, scalable digital marketplace.

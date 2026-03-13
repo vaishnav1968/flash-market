@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useGeolocation } from "@/hooks/useGeolocation";
@@ -14,9 +14,46 @@ export default function RoleSelectionPage() {
 	const [fullName, setFullName] = useState("");
 	const [phone, setPhone] = useState("");
 	const [shopName, setShopName] = useState("");
-	const [shopAddress, setShopAddress] = useState("");
+	const [baseLatitude, setBaseLatitude] = useState("");
+	const [baseLongitude, setBaseLongitude] = useState("");
 	const [submitting, setSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+
+	useEffect(() => {
+		if (latitude != null && !baseLatitude) {
+			setBaseLatitude(latitude.toFixed(6));
+		}
+		if (longitude != null && !baseLongitude) {
+			setBaseLongitude(longitude.toFixed(6));
+		}
+	}, [latitude, longitude, baseLatitude, baseLongitude]);
+
+	const parsedBaseLatitude =
+		baseLatitude.trim() === "" ? null : Number(baseLatitude.trim());
+	const parsedBaseLongitude =
+		baseLongitude.trim() === "" ? null : Number(baseLongitude.trim());
+
+	const hasValidCoordinates =
+		parsedBaseLatitude != null &&
+		parsedBaseLongitude != null &&
+		Number.isFinite(parsedBaseLatitude) &&
+		Number.isFinite(parsedBaseLongitude) &&
+		Math.abs(parsedBaseLatitude) <= 90 &&
+		Math.abs(parsedBaseLongitude) <= 180;
+
+	const mapEmbedUrl = useMemo(() => {
+		if (!hasValidCoordinates || parsedBaseLatitude == null || parsedBaseLongitude == null) {
+			return null;
+		}
+
+		const delta = 0.01;
+		const left = parsedBaseLongitude - delta;
+		const right = parsedBaseLongitude + delta;
+		const top = parsedBaseLatitude + delta;
+		const bottom = parsedBaseLatitude - delta;
+
+		return `https://www.openstreetmap.org/export/embed.html?bbox=${left}%2C${bottom}%2C${right}%2C${top}&layer=mapnik&marker=${parsedBaseLatitude}%2C${parsedBaseLongitude}`;
+	}, [hasValidCoordinates, parsedBaseLatitude, parsedBaseLongitude]);
 
 	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
@@ -28,6 +65,12 @@ export default function RoleSelectionPage() {
 
 		setSubmitting(true);
 		setError(null);
+
+		if (role === "vendor" && !hasValidCoordinates) {
+			setError("Please enter valid base coordinates for your vendor location.");
+			setSubmitting(false);
+			return;
+		}
 
 		try {
 			const response = await fetch("/api/users", {
@@ -41,9 +84,14 @@ export default function RoleSelectionPage() {
 					fullName,
 					phone,
 					shopName,
-					shopAddress,
-					latitude,
-					longitude,
+					latitude:
+						role === "vendor"
+							? parsedBaseLatitude
+							: latitude,
+					longitude:
+						role === "vendor"
+							? parsedBaseLongitude
+							: longitude,
 				}),
 			});
 
@@ -154,12 +202,12 @@ export default function RoleSelectionPage() {
 
 				<p className="mt-4 text-xs text-gray-500">
 					{latitude != null && longitude != null
-						? "Your current location will be saved to support distance-based delivery pricing."
-						: geolocationError || "Allow location access so FlashMarket can calculate delivery fees accurately."}
+						? "Your current location is available and can be used as a starting point."
+						: geolocationError || "Allow location access for quick coordinate autofill and accurate delivery pricing."}
 				</p>
 
 				{role === "vendor" && (
-					<div className="mt-4 grid gap-4 sm:grid-cols-2">
+						<div className="mt-4 grid gap-4 sm:grid-cols-2">
 						<label className="block text-sm text-gray-700">
 							Shop name
 							<input
@@ -171,15 +219,59 @@ export default function RoleSelectionPage() {
 							/>
 						</label>
 						<label className="block text-sm text-gray-700">
-							Shop address
+								Base latitude
 							<input
-								value={shopAddress}
-								onChange={(event) => setShopAddress(event.target.value)}
+									type="number"
+									step="any"
+									value={baseLatitude}
+									onChange={(event) => setBaseLatitude(event.target.value)}
 								className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-[#FF9760]"
-								placeholder="42 Market Lane"
+									placeholder="12.9716"
 								required
 							/>
 						</label>
+							<label className="block text-sm text-gray-700 sm:col-span-2">
+								Base longitude
+								<input
+									type="number"
+									step="any"
+									value={baseLongitude}
+									onChange={(event) => setBaseLongitude(event.target.value)}
+									className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-[#FF9760]"
+									placeholder="77.5946"
+									required
+								/>
+							</label>
+
+							<div className="rounded-xl border border-gray-200 bg-gray-50 p-3 sm:col-span-2">
+								<div className="mb-2 flex items-center justify-between gap-2">
+									<p className="text-sm font-medium text-gray-800">Base location preview</p>
+									<button
+										type="button"
+										onClick={() => {
+											if (latitude != null && longitude != null) {
+												setBaseLatitude(latitude.toFixed(6));
+												setBaseLongitude(longitude.toFixed(6));
+											}
+										}}
+										className="rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100"
+									>
+										Use my current location
+									</button>
+								</div>
+								{mapEmbedUrl ? (
+									<iframe
+										title="Vendor base location map"
+										src={mapEmbedUrl}
+										className="h-52 w-full rounded-lg border border-gray-200"
+										loading="lazy"
+									/>
+								) : (
+									<div className="flex h-52 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white text-xs text-gray-500">
+										Enter valid latitude and longitude to preview a marker on the map.
+									</div>
+								)}
+							</div>
 					</div>
 				)}
 
