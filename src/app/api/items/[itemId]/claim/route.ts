@@ -45,7 +45,37 @@ async function getAuthenticatedUserId(request: Request) {
 		return null;
 	}
 
-	return data.user.id;
+	return data.user;
+}
+
+async function ensureUserProfile(user: {
+	id: string;
+	email?: string | null;
+	user_metadata?: {
+		full_name?: string;
+		avatar_url?: string;
+	};
+}) {
+	const fullName =
+		user.user_metadata?.full_name?.trim() ||
+		user.email?.split("@")[0] ||
+		"FlashMarket User";
+
+	const payload = {
+		id: user.id,
+		email: user.email ?? `${user.id}@unknown.local`,
+		full_name: fullName,
+		role: "buyer",
+		avatar_url: user.user_metadata?.avatar_url ?? null,
+	};
+
+	const { error } = await supabaseAdmin
+		.from("users")
+		.upsert(payload, { onConflict: "id" });
+
+	if (error) {
+		console.error("ensureUserProfile error:", error.message);
+	}
 }
 
 export async function POST(
@@ -53,10 +83,13 @@ export async function POST(
 	context: { params: Promise<{ itemId: string }> }
 ) {
 	try {
-		const userId = await getAuthenticatedUserId(request);
-		if (!userId) {
+		const authUser = await getAuthenticatedUserId(request);
+		if (!authUser) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
+
+		await ensureUserProfile(authUser);
+		const userId = authUser.id;
 
 		const { itemId } = await context.params;
 		const body = (await request.json()) as {
