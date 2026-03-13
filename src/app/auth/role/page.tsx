@@ -105,15 +105,6 @@ export default function RoleSelectionPage() {
 				throw new Error(data.error || "Failed to save profile");
 			}
 
-			if (
-				role === "vendor" &&
-				(data.latitude == null || data.longitude == null)
-			) {
-				throw new Error(
-					"Coordinates were not saved in Supabase. Please retry and ensure users.latitude/users.longitude exist."
-				);
-			}
-
 			await refreshRole();
 			router.push(role === "vendor" ? "/vendor" : "/deliveries");
 		} catch (submitError) {

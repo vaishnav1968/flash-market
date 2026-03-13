@@ -1,0 +1,148 @@
+FlashMarket - How It Works
+==========================
+
+1. Overview
+FlashMarket is a marketplace for surplus perishable food. Vendors list food that may expire soon, and buyers can claim it at a discounted price. The closer the food gets to expiry, the lower the price becomes.
+
+
+2. Main User Flow
+A) Guest flow
+- A user who is not logged in is treated as a guest.
+- Guests are redirected to /guest.
+- Guests can browse items and understand how the platform works.
+- To interact fully, they sign in with Google.
+
+B) Authentication flow
+- Google login is handled through Supabase Auth.
+- After login, the app checks whether the user already has a profile.
+- If not, the user is sent to the role selection page.
+- If yes, the user goes to the main marketplace.
+
+C) Role setup flow
+- The user chooses either Buyer or Vendor.
+- Buyers save a basic profile.
+- Vendors save:
+  - Full name
+  - Phone
+  - Shop name
+  - Base latitude and longitude
+- The vendor can preview their base coordinates on a map before saving.
+- The profile is stored in Supabase.
+
+
+3. Vendor Flow
+- Vendors open the Vendor Dashboard.
+- They create a new listing with item details like:
+  - name
+  - category
+  - quantity
+  - base price
+  - shelf life
+- The item is saved to the items table in Supabase.
+- Once saved, the item appears in the marketplace.
+- The vendor dashboard also shows listing counts, stock, and sold-out items.
+
+
+4. Buyer Flow
+- Buyers browse the marketplace.
+- Each item card shows:
+  - item image
+  - current live price
+  - discount percentage
+  - expiry countdown
+  - available quantity
+- The buyer can search or filter by category.
+- When the buyer clicks Claim, a modal opens.
+- The buyer chooses:
+  - Pickup
+  - Delivery
+
+Pickup:
+- Buyer pays at the vendor location.
+
+Delivery:
+- The app calculates the distance between buyer and vendor.
+- Delivery fee is calculated as:
+  distance in km x 11
+- If location data is missing, delivery is disabled.
+
+
+5. Claim Flow
+- When a buyer confirms the claim, the app calls:
+  POST /api/items/[itemId]/claim
+- The API:
+  - authenticates the user
+  - ensures the buyer profile exists
+  - verifies the item is still available
+  - reduces the quantity
+  - updates item status if needed
+  - creates a record in the claims table
+- If delivery is selected, it also creates a record in the deliveries table.
+
+
+6. Delivery Flow
+- Delivery tasks appear on the deliveries page.
+- Nearby users can view deliveries on a map.
+- A user can claim a delivery task.
+- When delivery is completed, reward credits are processed.
+- These credits are stored for the user in Supabase.
+
+
+7. Dynamic Pricing Logic
+- Each item starts at a base price.
+- As time moves closer to expiry, the price drops.
+- A floor price ensures the vendor still keeps a minimum value.
+- This encourages fast sales and reduces food waste.
+
+
+8. Database Structure
+Main tables:
+- users
+  Stores buyer/vendor profile, role, and coordinates.
+
+- items
+  Stores listing details, quantity, expiry data, and current claim status.
+
+- claims
+  Stores buyer claim transactions, payout split, and status.
+
+- deliveries
+  Stores delivery jobs, pickup/drop-off coordinates, and rewards.
+
+
+9. APIs Used in the App
+- GET /api/items
+  Fetch marketplace listings.
+
+- POST /api/items
+  Create a vendor listing.
+
+- POST /api/items/[itemId]/claim
+  Claim an item.
+
+- POST /api/users
+  Save or update user role/profile.
+
+- GET /api/users/[userId]
+  Load user profile and coordinates.
+
+- GET /api/deliveries/nearby
+  Load nearby delivery tasks.
+
+
+10. Deployment and Runtime
+- Frontend and API routes run on Next.js.
+- Authentication and database are handled by Supabase.
+- The app is deployed on Netlify using the Next.js runtime plugin.
+- Product images are fetched using the Pexels API.
+
+
+11. Why This System Matters
+- Vendors reduce waste and recover value from unsold food.
+- Buyers get lower prices on good food.
+- Communities benefit from lower waste and affordable local food.
+- Delivery adds an extra earning opportunity for nearby users.
+
+
+12. Short Simple Explanation
+FlashMarket helps vendors sell food before it expires by lowering prices in real time. Buyers can quickly claim discounted food, choose pickup or delivery, and nearby users can earn rewards by handling deliveries.

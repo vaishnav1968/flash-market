@@ -1,4 +1,5 @@
 import type { Item, ItemCategory, ItemStatus } from "@/lib/types";
+import { parseVendorCoordinates } from "@/lib/vendor-location";
 
 interface ItemRow {
 	id: string;
@@ -40,6 +41,11 @@ interface ItemRow {
 
 export function mapItemRow(row: ItemRow): Item {
 	const vendorProfile = Array.isArray(row.users) ? row.users[0] : row.users;
+	const vendorCoordinates = parseVendorCoordinates({
+		latitude: vendorProfile?.latitude,
+		longitude: vendorProfile?.longitude,
+		shop_address: vendorProfile?.shop_address,
+	});
 
 	return {
 		id: row.id,
@@ -47,10 +53,8 @@ export function mapItemRow(row: ItemRow): Item {
 		vendorName: vendorProfile?.full_name ?? undefined,
 		vendorShopName: vendorProfile?.shop_name ?? undefined,
 		vendorAddress: vendorProfile?.shop_address ?? undefined,
-		vendorLatitude:
-			vendorProfile?.latitude == null ? undefined : Number(vendorProfile.latitude),
-		vendorLongitude:
-			vendorProfile?.longitude == null ? undefined : Number(vendorProfile.longitude),
+		vendorLatitude: vendorCoordinates.latitude ?? undefined,
+		vendorLongitude: vendorCoordinates.longitude ?? undefined,
 		name: row.name,
 		description: row.description ?? undefined,
 		category: row.category,

@@ -1,0 +1,45 @@
+flowchart TD
+    A[User opens FlashMarket] --> B{Logged in?}
+    B -- No --> C[/guest route]
+    B -- Yes --> D[/ main marketplace]
+
+    C --> E[Browse live items as guest]
+    E --> F[Click Sign in with Google]
+    F --> G[Supabase Google OAuth]
+    G --> H[/auth/callback]
+    H --> I{Profile exists?}
+    I -- No --> J[/auth/role]
+    I -- Yes --> D
+
+    J --> K{Choose role}
+    K -- Buyer --> L[Save buyer profile]
+    K -- Vendor --> M[Enter shop name]
+    M --> N[Enter base latitude and longitude]
+    N --> O[Preview base location on map]
+    O --> P[Save vendor profile to Supabase]
+    L --> D
+    P --> Q[/vendor dashboard]
+
+    D --> R[Fetch items from /api/items]
+    R --> S[Show dynamic pricing cards]
+    S --> T[Buyer clicks Claim]
+    T --> U[Open claim modal]
+    U --> V{Pickup or Delivery?}
+    V -- Pickup --> W[POST /api/items/[itemId]/claim]
+    V -- Delivery --> X[Calculate distance and fee]
+    X --> W
+    W --> Y[Create claim in Supabase]
+    Y --> Z[Update item quantity/status]
+    Z --> AA{Delivery selected?}
+    AA -- No --> AB[Claim complete]
+    AA -- Yes --> AC[Create delivery task]
+    AC --> AD[Delivery appears on /deliveries map]
+
+    Q --> AE[Vendor adds listing]
+    AE --> AF[POST /api/items]
+    AF --> AG[Item stored in Supabase]
+    AG --> AH[Appears in marketplace]
+
+    AD --> AI[Nearby user claims delivery]
+    AI --> AJ[Delivery status updated]
+    AJ --> AK[Credits rewarded on completion]

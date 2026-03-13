@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { parseVendorCoordinates } from "@/lib/vendor-location";
 
 export async function GET(
   _request: Request,
@@ -30,7 +31,7 @@ export async function GET(
   if (error) {
     const basicProfile = await supabaseAdmin
       .from("users")
-      .select("id, role, full_name, shop_name, avatar_url")
+      .select("id, role, full_name, shop_name, shop_address, avatar_url")
       .eq("id", userId)
       .single();
     data = basicProfile.data as Record<string, unknown> | null;
@@ -41,20 +42,20 @@ export async function GET(
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
+  const coordinates = parseVendorCoordinates({
+    latitude: data.latitude,
+    longitude: data.longitude,
+    shop_address: data.shop_address,
+  });
+
   return NextResponse.json({
     id: String(data.id),
     role: data.role,
     fullName: data.full_name,
     shopName: data.shop_name,
     shopAddress: (data.shop_address as string | null | undefined) ?? null,
-    latitude:
-      data.latitude == null || !Number.isFinite(Number(data.latitude))
-        ? null
-        : Number(data.latitude),
-    longitude:
-      data.longitude == null || !Number.isFinite(Number(data.longitude))
-        ? null
-        : Number(data.longitude),
+    latitude: coordinates.latitude,
+    longitude: coordinates.longitude,
     avatarUrl: data.avatar_url,
   });
 }

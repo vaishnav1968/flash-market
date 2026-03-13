@@ -13,7 +13,9 @@ FlashMarket is a real-time marketplace for surplus perishable food where prices 
 
 3) Our Solution
 FlashMarket connects vendors and buyers through a live marketplace:
+- Guests can explore the marketplace at /guest before signing in.
 - Vendors list perishable items with quantity, shelf life, and base price.
+- Vendors save their current base coordinates so delivery quotes work accurately.
 - A dynamic pricing engine reduces price over time until expiry.
 - Buyers can claim items quickly before they expire.
 - Buyers can choose pickup or delivery (distance-based fee).
@@ -29,7 +31,8 @@ A) Real-time Dynamic Pricing
 B) Vendor Dashboard
 - Add and manage listings in seconds.
 - Track live listings, sold-out count, and stock units.
-- Vendor profile includes location for delivery quote support.
+- Vendor profile stores base coordinates for delivery quote support.
+- Vendor setup includes a live map preview for the saved base location.
 
 C) Buyer Marketplace
 - Browse cards with live countdown and current discount.
@@ -49,26 +52,28 @@ E) Nearby Delivery Map
 F) Authentication and Roles
 - Google login via Supabase Auth.
 - Role-based flow for buyer and vendor.
-- Guest route support for non-logged-in users.
+- Guest route support for non-logged-in users at /guest.
+- Logged-in users are routed back to the main marketplace.
 
 
 5) Tech Stack
 - Frontend: Next.js 16 (App Router), React, Tailwind CSS, TypeScript
 - Backend/API: Next.js API routes
 - Database/Auth: Supabase (Postgres + Auth)
-- Maps: react-map-gl / maplibre-gl
+- Maps: react-map-gl / maplibre-gl + OpenStreetMap embed for vendor base preview
+- Images: Pexels API for product imagery
 - Notifications: Resend-ready integration
 - Deployment: Netlify with Next.js runtime plugin
 
 
 6) System Design (Simple)
 Client (Web/PWA)
-  -> Next.js App UI (Marketplace, Vendor Dashboard, Delivery Map)
+  -> Next.js App UI (Guest page, Marketplace, Vendor Dashboard, Delivery Map)
   -> Next.js API Routes (/api/items, /api/items/[id]/claim, /api/deliveries/*, /api/users/*)
   -> Supabase (users, items, claims, deliveries)
 
 Key Data Tables:
-- users: profile, role, location, credits
+- users: profile, role, base coordinates, credits
 - items: listing details, price basis, status, expiry
 - claims: buyer claims and payout split
 - deliveries: delivery tasks and rewards
@@ -82,13 +87,14 @@ Key Data Tables:
 
 
 8) Demo Script (2-3 Minutes)
-1. Open guest marketplace and show live decreasing prices.
-2. Sign in with Google.
-3. As vendor: add a perishable item.
-4. As buyer: claim item with pickup or delivery.
-5. Show delivery fee quote using distance.
-6. Open delivery map and claim a nearby delivery task.
-7. Conclude with impact: less waste, faster sell-through, cheaper food.
+1. Open /guest and show live decreasing prices without login.
+2. Sign in with Google and show redirect into the full app.
+3. As vendor: choose vendor role, save base coordinates, and show map preview.
+4. Add a perishable item from the vendor dashboard.
+5. As buyer: claim item with pickup or delivery.
+6. Show delivery fee quote using vendor and buyer distance.
+7. Open delivery map and claim a nearby delivery task.
+8. Conclude with impact: less waste, faster sell-through, cheaper food.
 
 
 9) Impact Metrics to Mention
@@ -119,6 +125,7 @@ Slide 3: Solution
 - Dynamic pricing + instant claims + optional delivery
 
 Slide 4: Product Walkthrough
+- Guest marketplace
 - Vendor dashboard
 - Buyer marketplace
 - Claim modal
@@ -131,6 +138,7 @@ Slide 6: Technical Highlights
 - Time-decay pricing engine
 - Role-based auth
 - Delivery distance fee and geolocation
+- Vendor coordinate storage and location preview
 
 Slide 7: Impact
 - Waste reduced
@@ -148,4 +156,4 @@ Slide 9: Closing
 
 
 12) Short Closing Statement
-FlashMarket turns expiring inventory into real-time opportunity. Vendors recover value, buyers save money, and communities reduce food waste through a simple, scalable digital marketplace.
+FlashMarket turns expiring inventory into real-time opportunity. Vendors recover value, buyers save money, and communities reduce food waste through a simple, scalable digital marketplace with dynamic pricing, role-based access, and location-aware delivery support.

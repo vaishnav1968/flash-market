@@ -4,6 +4,7 @@ import { calculateDeliveryFee, calculateDistanceKm } from "@/lib/delivery";
 import { mapItemRow } from "@/lib/item-mappers";
 import { supabase } from "@/lib/supabase";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { parseVendorCoordinates } from "@/lib/vendor-location";
 
 const ITEM_SELECT =
 	"id, vendor_id, name, description, category, base_price, unit, quantity, image_url, tags, shelf_life_hours, listed_at, expires_at, price_floor_pct, status, claimed_by, claimed_at, created_at, updated_at";
@@ -17,6 +18,16 @@ async function getVendorProfile(vendorId: string) {
 
 	if (!fullProfileQuery.error && fullProfileQuery.data) {
 		return fullProfileQuery.data as Record<string, unknown>;
+	}
+
+	const coordsFallbackQuery = await supabaseAdmin
+		.from("users")
+		.select("id, full_name, shop_name, shop_address")
+		.eq("id", vendorId)
+		.single();
+
+	if (!coordsFallbackQuery.error && coordsFallbackQuery.data) {
+		return coordsFallbackQuery.data as Record<string, unknown>;
 	}
 
 	const basicProfileQuery = await supabaseAdmin
@@ -138,12 +149,15 @@ export async function POST(
 
 		let deliveryDistanceKm: number | null = null;
 		let deliveryFee: number | null = null;
+		const vendorCoordinates = parseVendorCoordinates({
+			latitude: vendorProfile?.latitude,
+			longitude: vendorProfile?.longitude,
+			shop_address: vendorProfile?.shop_address,
+		});
 
 		if (fulfillmentMethod === "delivery") {
-			const vendorLatitude =
-				vendorProfile?.latitude == null ? null : Number(vendorProfile.latitude);
-			const vendorLongitude =
-				vendorProfile?.longitude == null ? null : Number(vendorProfile.longitude);
+			const vendorLatitude = vendorCoordinates.latitude;
+			const vendorLongitude = vendorCoordinates.longitude;
 
 			if (
 				vendorLatitude == null ||
@@ -211,8 +225,8 @@ export async function POST(
 		}
 
 		if (fulfillmentMethod === "delivery" && deliveryDistanceKm != null && deliveryFee != null) {
-			const vendorLatitude = Number(vendorProfile?.latitude);
-			const vendorLongitude = Number(vendorProfile?.longitude);
+			const vendorLatitude = vendorCoordinates.latitude;
+			const vendorLongitude = vendorCoordinates.longitude;
 
 			const { error: deliveryError } = await supabaseAdmin.from("deliveries").insert({
 				claim_id: claim.id,

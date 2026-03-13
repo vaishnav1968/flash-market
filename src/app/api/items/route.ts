@@ -24,6 +24,14 @@ async function attachVendorProfiles<T extends { vendor_id: string }>(rows: T[]) 
 	if (!fullProfileQuery.error && fullProfileQuery.data) {
 		profileData = fullProfileQuery.data as Array<Record<string, unknown>>;
 	} else {
+		const coordsFallbackQuery = await supabaseAdmin
+			.from("users")
+			.select("id, full_name, shop_name, shop_address")
+			.in("id", vendorIds);
+
+		if (!coordsFallbackQuery.error && coordsFallbackQuery.data) {
+			profileData = coordsFallbackQuery.data as Array<Record<string, unknown>>;
+		} else {
 		const basicProfileQuery = await supabaseAdmin
 			.from("users")
 			.select("id, full_name, shop_name")
@@ -34,9 +42,12 @@ async function attachVendorProfiles<T extends { vendor_id: string }>(rows: T[]) 
 		} else {
 			console.warn(
 				"Vendor profile enrichment skipped:",
-				fullProfileQuery.error?.message ?? basicProfileQuery.error?.message
+				fullProfileQuery.error?.message ??
+					coordsFallbackQuery.error?.message ??
+					basicProfileQuery.error?.message
 			);
 			return rows;
+		}
 		}
 	}
 
