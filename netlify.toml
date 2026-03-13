@@ -1,8 +1,8 @@
 [build]
   command = "npm run build"
-  publish = ".next"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
 [build.environment]
-  SECRETS_SCAN_OMIT_KEYS = "https://ifhkuzqbangwspiobxoz.supabase.co,eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlmaGt1enFiYW5nd3NwaW9ieG96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzMTM5MDAsImV4cCI6MjA4ODg4OTkwMH0.D8erriP-Vy-z-463iauFr1TpOffF_Lnl5QpLn8BkBr8"
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY"

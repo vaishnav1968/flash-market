@@ -16,18 +16,32 @@ async function parseJson<T>(response: Response): Promise<T | null> {
   }
 }
 
-export async function getItems(): Promise<Item[]> {
-  const response = await fetch("/api/items", {
-    method: "GET",
-    cache: "no-store",
-  });
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
-  if (!response.ok) {
-    console.error("getItems error:", response.statusText);
-    return [];
+export async function getItems(): Promise<Item[]> {
+  const attempts = 3;
+
+  for (let i = 0; i < attempts; i += 1) {
+    const response = await fetch("/api/items", {
+      method: "GET",
+      cache: "no-store",
+    });
+
+    if (response.ok) {
+      return (await parseJson<Item[]>(response)) ?? [];
+    }
+
+    console.error("getItems error:", response.status, response.statusText);
+
+    // Retry briefly for transient deploy/cold-start/API wake-up issues.
+    if (i < attempts - 1) {
+      await sleep(500 * (i + 1));
+    }
   }
 
-  return (await parseJson<Item[]>(response)) ?? [];
+  return [];
 }
 
 export async function addItem(
